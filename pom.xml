@@ -89,6 +89,23 @@
             <version>2.4.3</version>
         </dependency>
 
+
+
+
+        <!--获取视频第一帧-->
+        <!-- https://mvnrepository.com/artifact/org.bytedeco/javacv -->
+        <dependency>
+            <groupId>org.bytedeco</groupId>
+            <artifactId>javacv</artifactId>
+            <version>1.5.1</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/org.bytedeco/javacv-platform -->
+        <dependency>
+            <groupId>org.bytedeco</groupId>
+            <artifactId>javacv-platform</artifactId>
+            <version>1.5.1</version>
+        </dependency>
+
     </dependencies>
 
     <build>

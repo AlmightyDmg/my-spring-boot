@@ -1,70 +1,29 @@
 package cn.com.dmg.myspringboot.test;
 
-import cn.hutool.core.codec.Base64;
-import cn.hutool.core.util.ObjectUtil;
-import cn.hutool.core.util.ReflectUtil;
-import cn.hutool.http.HttpUtil;
-import com.alibaba.fastjson.JSONObject;
+import cn.hutool.core.img.ImgUtil;
+import cn.hutool.core.lang.UUID;
 
 import java.io.File;
-import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 public class MyTest {
 
     public static void main(String[] args) throws Exception{
-       ArrayList<Integer> list = new ArrayList();
+        String jpgPath = "C:\\Users\\zhum\\Desktop\\1.jpg";
+        String outPath = "C:\\Users\\zhum\\Desktop\\1_rotate.jpg";
 
-       list.add(2);
-       list.add(3);
-       list.add(1);
-       list.sort(new Comparator<Integer>() {
-           @Override
-           public int compare(Integer o1, Integer o2) {
-               if(o1>o2){
-                   return 1;
-               }else if(o1 < o2){
-                   return -1;
-               } else {
-                   return 0;
-               }
-           }
-       });
+        File inFile = new File(jpgPath);
+        File outFile = new File(outPath);
 
-        for (Integer integer : list) {
-            System.out.println(integer);
-        }
-
+        ImgUtil.rotate(inFile,75,outFile);
 
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

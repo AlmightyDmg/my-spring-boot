@@ -13,6 +13,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class MyXmlUtils {
 
@@ -20,33 +22,65 @@ public class MyXmlUtils {
     private static RedisUtil redisUtil;
 
     public static void main(String[] args) {
-        String xmlPath = "C:/Users/zhum/Desktop/jz_new.xml";
+        String xmlPath = "C:/Users/zhum/Desktop/jz_test2.xml";
         File file = new File(xmlPath);
         Document document = XmlUtil.readXML(file);
 
-        Element rootElement = XmlUtil.getRootElement(document);
+        //查询目录
+        Element catalogue = XmlUtil.getElementByXPath("//catalogue[@id='a']", document);
+        //新增一个item 包含子节点
+        Element itemP = document.createElement("item");
+        itemP.setAttribute("id","p");
+        //查询两个节点，放到itemP下
+        Element itemEle1 = XmlUtil.getElementByXPath("//catalogue[@id='a']/item[@id='1']", document);
+        Element itemEle2 = XmlUtil.getElementByXPath("//catalogue[@id='a']/item[@id='2']", document);
+        //先在目录下删除，再移动
+        catalogue.removeChild(itemEle1);
+        catalogue.removeChild(itemEle2);
+        //移动
+        itemP.appendChild(itemEle1);
+        itemP.appendChild(itemEle2);
+        //将itemP放到目录下
+        catalogue.appendChild(itemP);
 
-        Element elementByXPath = XmlUtil.getElementByXPath("//catalogue[@id='2']", document);
+        catalogue.removeChild(itemP);
+
+        System.out.println(XmlUtil.toStr(document));
 
 
-        Element item = document.createElement("item");
-
-        item.setAttribute("aaa","321");
-
-        elementByXPath.appendChild(item);
-
-        String s = XmlUtil.toStr(document);
-
-        System.out.println(s);
+    }
 
 
+    public static void editEle(Document document){
+        Element itemEle = XmlUtil.getElementByXPath("//catalogue[@id='a']/item[@id='1']", document);
+        itemEle.setAttribute("itemName","5555");
+        System.out.println(XmlUtil.toStr(document));
+    }
+
+
+    /**
+     * @Description 批量新增item
+     * @author zhum
+     * @date 2021/8/3 10:09
+     * @param document
+     * @Return void
+     */
+    public static void testBatchAddItem(Document document){
+        Element catalogueEle = XmlUtil.getElementByXPath("//catalogue[@id='a']", document);
+        for (int i = 1; i <= 1000; i++) {
+            Element item = document.createElement("item");
+            item.setAttribute("id",Integer.toString(i));
+            catalogueEle.appendChild(item);
+        }
+        String format = XmlUtil.format(document);
+        System.out.println(format);
     }
 
     /**
      * @Description 根据 跟节点 获得所有 tag为catalogue的子节点
      * @author zhum
      * @date 2021/7/27 15:46
-     * @param elementList
+     * @param elementListMap
      * @param rootElement
      * @Return void
      */
@@ -58,6 +92,47 @@ public class MyXmlUtils {
                 getAllElements(elementListMap,element);
             }
         }
+    }
+
+    /**
+     * @Description 测试排序
+     * @author zhum
+     * @date 2021/8/3 10:08
+     * @param document
+     * @Return void
+     */
+    public static void testSort(Document document){
+        Element catalogueEle = XmlUtil.getElementByXPath("//catalogue[@id='2-3']", document);
+
+        //NodeList childNodes = elementByXPath.getChildNodes();
+
+        //List<Element> elementList = XmlUtil.transElements(childNodes);
+
+        //排序之后的id
+        List<String> afterSortIds = new ArrayList<>();
+        afterSortIds.add("111");
+        afterSortIds.add("444");
+        afterSortIds.add("222");
+        afterSortIds.add("555");
+        afterSortIds.add("333");
+        //根据目录id 和 itemid获得ele
+        for (String afterSortId : afterSortIds) {
+            Element itemEle = XmlUtil.getElementByXPath("//catalogue[@id='2-3']/item[@id='"+afterSortId+"']", document);
+
+            //先删除
+            catalogueEle.removeChild(itemEle);
+            //再新增
+            catalogueEle.appendChild(itemEle);
+        }
+
+        String s = XmlUtil.toStr(document);
+        //去除换行
+        Pattern p = Pattern.compile("\r|\n");
+        Matcher m = p.matcher(s);
+        String s2 = m.replaceAll("");
+        //格式化
+        String format = XmlUtil.format(s2);
+        System.out.println(format);
     }
 
     public static void test(){
