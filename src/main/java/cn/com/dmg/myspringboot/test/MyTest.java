@@ -1,9 +1,14 @@
 package cn.com.dmg.myspringboot.test;
 
 import cn.hutool.core.img.ImgUtil;
+import cn.hutool.core.io.FastByteArrayOutputStream;
+import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.lang.UUID;
+import cn.hutool.core.util.ZipUtil;
+import cn.hutool.http.HttpUtil;
 
-import java.io.File;
+import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
@@ -15,13 +20,15 @@ import java.util.concurrent.*;
 public class MyTest {
 
     public static void main(String[] args) throws Exception{
-        String jpgPath = "C:\\Users\\zhum\\Desktop\\1.jpg";
-        String outPath = "C:\\Users\\zhum\\Desktop\\1_rotate.jpg";
 
-        File inFile = new File(jpgPath);
-        File outFile = new File(outPath);
+        File file = new File("C:\\Users\\zhum\\Desktop\\图片");
+        //file.delete();
 
-        ImgUtil.rotate(inFile,75,outFile);
+        FileUtil.del(file);
+
+
+
+
 
     }
 
