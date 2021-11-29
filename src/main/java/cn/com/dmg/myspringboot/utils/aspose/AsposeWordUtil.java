@@ -14,13 +14,25 @@ public class AsposeWordUtil {
             return;
         }
 
-        testGenerateWordByTemp();
+        //根据模板生成文档
+        //testGenerateWordByTemp();
+        //word转pdf
+        word2Pdf("C:\\Users\\zhum\\Desktop\\TECH_WORD_192_168_5_161_20211125164339481_6290.docx","C:\\Users\\zhum\\Desktop\\TECH_WORD_192_168_5_161_20211125164339481_6290.pdf");
+        //添加图片
+        //addSeal2Word();
 
     }
 
     public static void testGenerateWordByTemp(){
+
+        /*
+            当原文件为wps的时候，目标文件不能为wps，只能为docx/doc格式
+            @author zhum
+            @date 2021/9/24 15:28
+         */
+
         try {
-            FileInputStream fs = new FileInputStream("C:\\Users\\zhum\\Desktop\\智能会议系统使用手册(V3.0.0).docx");
+            FileInputStream fs = new FileInputStream("C:\\Users\\zhum\\Desktop\\天宇0913.wps");
             String targetPath = "C:\\Users\\zhum\\Desktop\\dddd.docx";
             Map<String,Object> map = new HashMap<>();
             map.put("{使用手册}","1111");
@@ -158,9 +170,9 @@ public class AsposeWordUtil {
      * @Return: void
      */
     public static void addSeal2Word(){
-        String wordPath = "C:\\Users\\zhum\\Desktop\\ws1.docx";
+        String wordPath = "C:\\Users\\zhum\\Desktop\\天宇0913.wps";
         String imagePath = "C:\\Users\\zhum\\Desktop\\1111111.png";
-        String saveDocPath = "C:\\Users\\zhum\\Desktop\\aspose-waterMark.docx";
+        String saveDocPath = "C:\\Users\\zhum\\Desktop\\222.docx";
 
 
         try {

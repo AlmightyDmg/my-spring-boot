@@ -8,11 +8,11 @@ import org.jeecg.common.util.RedisUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -22,33 +22,75 @@ public class MyXmlUtils {
     private static RedisUtil redisUtil;
 
     public static void main(String[] args) {
-        String xmlPath = "C:/Users/zhum/Desktop/jz_test2.xml";
+        String xmlPath = "C:/Users/zhum/Desktop/jz_simple.xml";
         File file = new File(xmlPath);
         Document document = XmlUtil.readXML(file);
+        Element catalogue = XmlUtil.getElementByXPath("//catalogue[@id='1-1']", document);
+        Node parentNode = catalogue.getParentNode();
+        NamedNodeMap attributes = parentNode.getAttributes();
 
-        //查询目录
-        Element catalogue = XmlUtil.getElementByXPath("//catalogue[@id='a']", document);
-        //新增一个item 包含子节点
-        Element itemP = document.createElement("item");
-        itemP.setAttribute("id","p");
-        //查询两个节点，放到itemP下
-        Element itemEle1 = XmlUtil.getElementByXPath("//catalogue[@id='a']/item[@id='1']", document);
-        Element itemEle2 = XmlUtil.getElementByXPath("//catalogue[@id='a']/item[@id='2']", document);
-        //先在目录下删除，再移动
-        catalogue.removeChild(itemEle1);
-        catalogue.removeChild(itemEle2);
-        //移动
-        itemP.appendChild(itemEle1);
-        itemP.appendChild(itemEle2);
-        //将itemP放到目录下
-        catalogue.appendChild(itemP);
+        for (int i = 0; i < attributes.getLength(); i++) {
+            Node item = attributes.item(i);
+            String nodeName = item.getNodeName();
+            String nodeValue = item.getNodeValue();
+            System.out.println("name:" + nodeName + "，value:" + nodeValue);
+        }
 
-        catalogue.removeChild(itemP);
 
-        System.out.println(XmlUtil.toStr(document));
+//        //查询目录
+//        Element catalogue = XmlUtil.getElementByXPath("//catalogue[@id='a']", document);
+//        //新增一个item 包含子节点
+//        Element itemP = document.createElement("item");
+//        itemP.setAttribute("id","p");
+//        //查询两个节点，放到itemP下
+//        Element itemEle1 = XmlUtil.getElementByXPath("//catalogue[@id='a']/item[@id='1']", document);
+//        Element itemEle2 = XmlUtil.getElementByXPath("//catalogue[@id='a']/item[@id='2']", document);
+//        //先在目录下删除，再移动
+//        catalogue.removeChild(itemEle1);
+//        catalogue.removeChild(itemEle2);
+//        //移动
+//        itemP.appendChild(itemEle1);
+//        itemP.appendChild(itemEle2);
+//        //将itemP放到目录下
+//        catalogue.appendChild(itemP);
+//
+//        catalogue.removeChild(itemP);
+//
+//        System.out.println(XmlUtil.toStr(document));
 
 
     }
+
+
+
+    public static void getAllCatalogueId(Document document){
+        List<String> idList = new ArrayList<>();
+        Set<String> idSet = new HashSet<>();
+        //获得所有节点
+        Map<Element,List<Element>> elementListMap = new HashMap<>();
+        Element rootElement = XmlUtil.getRootElement(document);
+        getAllElements(elementListMap,rootElement);
+        //获得所有节点的id
+        elementListMap.forEach((root,elementList)->{
+            for (Element element : elementList) {
+                String id = element.getAttribute("id");
+                idList.add(id);
+                idSet.add(id);
+            }
+        });
+
+        //最后加上根节点的id
+        String id = rootElement.getAttribute("id");
+        idList.add(id);
+        idSet.add(id);
+
+        System.out.println(idList);
+        System.out.println("list的长度为：" + idList.size());
+        System.out.println(idSet);
+        System.out.println("set的长度为：" + idSet.size());
+
+    }
+
 
 
     public static void editEle(Document document){

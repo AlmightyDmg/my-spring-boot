@@ -1,31 +1,36 @@
 package cn.com.dmg.myspringboot.test;
 
-import cn.hutool.core.img.ImgUtil;
-import cn.hutool.core.io.FastByteArrayOutputStream;
-import cn.hutool.core.io.FileUtil;
-import cn.hutool.core.io.IoUtil;
-import cn.hutool.core.lang.UUID;
-import cn.hutool.core.util.ZipUtil;
-import cn.hutool.http.HttpUtil;
-
-import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.*;
 
 public class MyTest {
 
     public static void main(String[] args) throws Exception{
 
-        File file = new File("C:\\Users\\zhum\\Desktop\\图片");
-        //file.delete();
+        String a = "1-1";
+        String b = "1-2";
+        String c = "1-3";
+        String d = "1-4";
+        String e = "1-5";
 
-        FileUtil.del(file);
 
+        Set<String> s1 = new HashSet<>();
+        s1.add(a);
+        s1.add(b);
+        s1.add(c);
+        s1.add(e);
+        Set<String> s2 = new HashSet<>();
+        s2.add(a);
+        s2.add(b);
+        s2.add(c);
+        s2.add(d);
+
+        s2.removeAll(s1);
+
+        System.out.println(s2);
 
 
 
