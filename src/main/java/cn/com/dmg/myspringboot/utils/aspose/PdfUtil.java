@@ -24,10 +24,20 @@ public class PdfUtil {
 
 //        img2PdfAndAddText("qsz1");
 //        img2PdfAndAddText("qsz2");
-        img2PdfAndAddText("qsz3");
+       // img2PdfAndAddText("qsz3");
         //img2PdfAndAddText("ocr");
         //getJsonString("C:\\Users\\zhum\\Desktop\\qsz3.txt");
 
+        getPdfWidthHeight();
+
+    }
+
+    public static void getPdfWidthHeight(){
+        Document pdfDocument = new Document("C:\\Users\\zhum\\Desktop\\2022年物业费发票.pdf");
+        PageInfo pageInfo = pdfDocument.getPageInfo();
+        double width = pageInfo.getWidth();
+        double height = pageInfo.getHeight();
+        log.info("PDF文档的宽度为：{}，高度为：{}",width,height);
     }
 
 

@@ -1,5 +1,9 @@
 package cn.com.dmg.myspringboot.test;
 
+import cn.hutool.core.date.DateUtil;
+import cn.hutool.system.OsInfo;
+import cn.hutool.system.SystemUtil;
+
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
@@ -8,32 +12,10 @@ import java.util.concurrent.*;
 
 public class MyTest {
 
-    public static void main(String[] args) throws Exception{
+    public static void main(String[] args) throws Exception {
 
-        String a = "1-1";
-        String b = "1-2";
-        String c = "1-3";
-        String d = "1-4";
-        String e = "1-5";
-
-
-        Set<String> s1 = new HashSet<>();
-        s1.add(a);
-        s1.add(b);
-        s1.add(c);
-        s1.add(e);
-        Set<String> s2 = new HashSet<>();
-        s2.add(a);
-        s2.add(b);
-        s2.add(c);
-        s2.add(d);
-
-        s2.removeAll(s1);
-
-        System.out.println(s2);
-
-
-
+        System.out.println(DateUtil.format(new Date(), "YYMMdd"));
+        System.out.println(DateUtil.format(new Date(), "YYYYMMdd"));
 
     }
 

@@ -1,5 +1,13 @@
 server:
   port: 8002
+  http:
+    port: 8080
+  ssl:
+    key-store: classpath:client.p12
+    key-store-type: PKCS12
+    key-alias: client
+    key-store-password: 12345678
+    enabled: true
 spring:
   redis:
     database: 0

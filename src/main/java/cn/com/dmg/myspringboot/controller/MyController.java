@@ -14,8 +14,8 @@ public class MyController {
 
     @Value("${server.port}")
     private String port;
-    @Resource
-    private RedisUtil redisUtil;
+//    @Resource
+//    private RedisUtil redisUtil;
 
     @GetMapping("/getPort")
     public String getPort(){
@@ -25,8 +25,8 @@ public class MyController {
 
     @GetMapping("/testJz")
     public String testJz(){
-        System.out.println(redisUtil);
-        MyXmlUtils.test();
+        //System.out.println(redisUtil);
+        //MyXmlUtils.test();
         return port;
     }
 

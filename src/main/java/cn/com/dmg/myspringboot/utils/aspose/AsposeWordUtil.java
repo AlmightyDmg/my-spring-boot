@@ -1,5 +1,8 @@
 package cn.com.dmg.myspringboot.utils.aspose;
 
+import com.aspose.pdf.Page;
+import com.aspose.pdf.PageCollection;
+import com.aspose.pdf.Watermark;
 import com.aspose.words.*;
 
 import java.io.*;
@@ -8,7 +11,7 @@ import java.util.Map;
 import java.util.UUID;
 
 public class AsposeWordUtil {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception{
         // 验证License 若不验证则转化出的pdf文档会有水印产生
         if (!getLicense()) {
             return;
@@ -17,10 +20,32 @@ public class AsposeWordUtil {
         //根据模板生成文档
         //testGenerateWordByTemp();
         //word转pdf
-        word2Pdf("C:\\Users\\zhum\\Desktop\\TECH_WORD_192_168_5_161_20211125164339481_6290.docx","C:\\Users\\zhum\\Desktop\\TECH_WORD_192_168_5_161_20211125164339481_6290.pdf");
+        //word2Pdf("C:\\Users\\zhum\\Desktop\\TECH_WORD_192_168_5_161_20211125164339481_6290.docx","C:\\Users\\zhum\\Desktop\\TECH_WORD_192_168_5_161_20211125164339481_6290.pdf");
         //添加图片
         //addSeal2Word();
 
+        //pdf转word 不可用
+//        String pdfPath = "C:\\Users\\zhum\\Desktop\\2222.pdf";
+//        FileInputStream fi = new FileInputStream(pdfPath);
+//        String wordPath = "C:\\Users\\zhum\\Desktop\\2222.docx";
+//        pdf2Word(fi,wordPath);
+
+        //word 转 html
+        String htmlPath = "C:\\Users\\zhum\\Desktop\\222.html";
+        String wordPath = "C:\\Users\\zhum\\Desktop\\222.docx";
+        FileInputStream fi = new FileInputStream(wordPath);
+        word2html(fi,htmlPath);
+
+    }
+
+
+    public static void delWaterMark(){
+        com.aspose.pdf.Document pdfDocument = new com.aspose.pdf.Document("");
+
+        PageCollection pages = pdfDocument.getPages();
+        for (Page page : pages) {
+            Watermark watermark = page.getWatermark();
+        }
     }
 
     public static void testGenerateWordByTemp(){
@@ -126,6 +151,65 @@ public class AsposeWordUtil {
             Document doc = new Document(wordInputStream);
             //全面支持DOC, DOCX, OOXML, RTF HTML, OpenDocument, PDF, EPUB, XPS, SWF 相互转换
             doc.save(os, com.aspose.words.SaveFormat.PDF);
+            //long now = System.currentTimeMillis();
+            os.close();
+            //转化用时
+            //System.out.println("共耗时：" + ((now - old) / 1000.0) + "秒");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+
+
+    /**
+     * @Description: TODO word2html
+     * @author: zhum
+     * @date: 2021/2/23 16:00
+     * @param wordInputStream word的input流
+     * @param htmlPath html文件位置
+     * @Return: void
+     */
+    public static void word2html(InputStream wordInputStream,String htmlPath){
+        try {
+            // 验证License 若不验证则转化出的pdf文档会有水印产生
+            if (!getLicense()) {
+                return;
+            }
+            //long old = System.currentTimeMillis();
+            //新建一个pdf文档
+            File file = new File(htmlPath);
+            FileOutputStream os = new FileOutputStream(file);
+            //Address是将要被转化的word文档
+            Document doc = new Document(wordInputStream);
+            //全面支持DOC, DOCX, OOXML, RTF HTML, OpenDocument, PDF, EPUB, XPS, SWF 相互转换
+            doc.save(os, SaveFormat.HTML);
+            //long now = System.currentTimeMillis();
+            os.close();
+            //转化用时
+            //System.out.println("共耗时：" + ((now - old) / 1000.0) + "秒");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    @Deprecated
+    public static void pdf2Word(InputStream pdfInputStream,String wordPath){
+        try {
+            // 验证License 若不验证则转化出的pdf文档会有水印产生
+            if (!getLicense()) {
+                return;
+            }
+            //long old = System.currentTimeMillis();
+            //新建一个pdf文档
+            File file = new File(wordPath);
+            FileOutputStream os = new FileOutputStream(file);
+            //Address是将要被转化的word文档
+            com.aspose.pdf.Document pdfDoc = new com.aspose.pdf.Document(pdfInputStream);
+            Document doc = new Document(pdfInputStream);
+            //全面支持DOC, DOCX, OOXML, RTF HTML, OpenDocument, PDF, EPUB, XPS, SWF 相互转换
+            pdfDoc.save(os, SaveFormat.DOCX);
             //long now = System.currentTimeMillis();
             os.close();
             //转化用时
