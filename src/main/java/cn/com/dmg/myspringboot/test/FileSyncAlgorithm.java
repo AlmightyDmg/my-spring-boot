@@ -169,8 +169,9 @@ public class FileSyncAlgorithm {
     public static List<PositionInfo> compareStr(List<String> md5s, String targetStr, int step){
 
         /*
-            每四个字节为一组进行拆分，查找是否有一样的
-            如果有 则记录 位置，如果没有，则起点向后移动一位 继续遍历  直到最后 有 或者 没有
+            每step长度为一组进行拆分，查找是否有一样的
+            如果有 则记录 位置
+            比对完成该块之后 第一个点 firstIndex 和 最后一个点 lastIndex 都向后移动一位 继续进行比较
             @author zhum
             @date 2022/5/24 10:07
          */
@@ -188,10 +189,8 @@ public class FileSyncAlgorithm {
         while (lastIndex <= targetStr.length() - 1){
             //求出md5值
             String substring = targetStr.substring(firstIndex, lastIndex);
-            //System.out.println("待比较的值为：" + substring);
             String bMd5 = MD5.create().digestHex(substring);
             if(md5s.contains(bMd5)){
-                //System.out.println("匹配上了，md5值为" + bMd5 + "，起止位置为（不包含最后一位）：" + firstIndex + "," + lastIndex);
                 //记录位置信息
                 List<Integer> indexList = findIndex(md5s, bMd5);
                 PositionInfo positionInfo = new PositionInfo();
@@ -199,23 +198,10 @@ public class FileSyncAlgorithm {
                 positionInfo.setFirstIndex(firstIndex);
                 positionInfo.setLastIndex(lastIndex);
                 positionInfos.add(positionInfo);
-
-                //匹配上了则跳出本次循环  在当前匹配的起点向后移动四位
-//                firstIndex += step;
-//                lastIndex = firstIndex + step;
-//                continue;
             }
             //没有匹配上则 比对下一个块
-            firstIndex += step;
-            lastIndex += step;
-
-            //如果本轮全部匹配完成  则起点向后移动一位 重新开始进行匹配
-            if(lastIndex > targetStr.length() - 1){
-                //向后移动一位
-                startIndex++;
-                firstIndex = startIndex;
-                lastIndex = firstIndex + step;
-            }
+            firstIndex ++;
+            lastIndex ++;
         }
 
         return positionInfos;
