@@ -2,6 +2,8 @@ package cn.com.dmg.myspringboot.test;
 
 import cn.hutool.crypto.digest.MD5;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -16,11 +18,24 @@ import java.util.Set;
 public class FileSyncAlgorithm {
     public static void main(String[] args) throws Exception {
 
-        //String originalStr = "taouiissomahuiissoman123";
-        String originalStr = "我爱天宇威视科技股份有限公司";
-        String targetStr = "1我爱天宇5威6视7科8技股份有限公司";
-        int step = 4;
-        System.out.println(execute(originalStr, targetStr, step));
+        //读取原字符串
+        byte[] originalBytes = Files.readAllBytes(Paths.get("C:\\Users\\zhum\\Desktop\\from.txt"));
+        String originalStr = new String(originalBytes, "utf-8");
+
+        //读取目标字符串
+        byte[] targetBytes = Files.readAllBytes(Paths.get("C:\\Users\\zhum\\Desktop\\target.txt"));
+        String targetStr = new String(targetBytes, "utf-8");
+        int length = targetStr.length();
+
+        int step = 320;
+
+        long start = System.currentTimeMillis();
+        System.out.println(execute(originalStr, targetStr, step,false));
+        long end = System.currentTimeMillis();
+
+        System.out.println("执行整个算法用时：" + (end - start) + "毫秒，目标字符串的长度为：" + length + "，分块的长度为：" + step);
+
+
     }
 
     /**
@@ -30,9 +45,10 @@ public class FileSyncAlgorithm {
      * @param originalStr
      * @param targetStr
      * @param step
+     * @param isTranslate 是否执行第四步翻译操作
      * @return boolean
      */
-    public static boolean execute(String originalStr,String targetStr,int step){
+    public static boolean execute(String originalStr,String targetStr,int step,boolean isTranslate){
         //分组之后剩余的部分
         StringBuilder extra = new StringBuilder();
 
@@ -47,10 +63,13 @@ public class FileSyncAlgorithm {
         //3.通过位置信息 与 原字符串相比较 将 变化的部分 转换为字符串 进行传递
         List resultList = translateChange(md5List,positionInfos,originalStr,step,extra.toString());
 
+        if(!isTranslate){
+            return true;
+        }
 
         //4.翻译位置信息 和 字符串 得出最后的文本结果  如果最后的文本结果 与 原来的文本 originalStr 相同  则说明算法没有问题
         String s = translateStr(resultList, targetStr);
-        System.out.println(s);
+        //System.out.println(s);
         return s.equals(originalStr);
     }
 
