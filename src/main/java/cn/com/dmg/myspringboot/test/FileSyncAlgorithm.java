@@ -27,7 +27,7 @@ public class FileSyncAlgorithm {
         String targetStr = new String(targetBytes, "utf-8");
         int length = targetStr.length();
 
-        int step = 320;
+        int step = 80;
 
         long start = System.currentTimeMillis();
         System.out.println(execute(originalStr, targetStr, step,false));
@@ -57,11 +57,11 @@ public class FileSyncAlgorithm {
 
 
         //2.通过和目标字符串进行对比，返回 目标字符串在原字符串中存在的部分的位置信息
-        List<PositionInfo> positionInfos = compareStr(md5List,targetStr,step);
+        List<int[]> positionInfos = compareStr(md5List,targetStr,step);
 
 
         //3.通过位置信息 与 原字符串相比较 将 变化的部分 转换为字符串 进行传递
-        List resultList = translateChange(md5List,positionInfos,originalStr,step,extra.toString());
+        List resultList = translateChange(md5List,positionInfos,originalStr,step,extra.toString(),true);
 
         if(!isTranslate){
             return true;
@@ -81,25 +81,24 @@ public class FileSyncAlgorithm {
      * @param positionInfos
      * @param step
      * @param extra
+     * @param isMergeResult 是否对位置信息进行合并
      * @return java.util.List
      */
-    private static List translateChange(List<String> md5List, List<PositionInfo> positionInfos,String originalStr,int step,String extra) {
+    private static List translateChange(List<String> md5List, List<int[]> positionInfos,String originalStr,int step,String extra,boolean isMergeResult) {
         List resultList = new ArrayList(md5List);
         //记录所有添加过位置信息的索引
         Set<Integer> indexSet = new HashSet<>();
         //进行转换  将有位置匹配的项换成位置信息  没有匹配的换成相对应的字符串
-        for (PositionInfo positionInfo : positionInfos) {
+        for (int[] positionInfo : positionInfos) {
             //向相应的索引位置添加位置信息
-            List<Integer> originalIndexArr = positionInfo.getOriginalIndexArr();
-            for (Integer index : originalIndexArr) {
-                //添加过的不需要添加
-                Object obj = resultList.get(index);
-                if(obj != null && obj instanceof PositionInfo){
-                    continue;
-                }
-                resultList.set(index,positionInfo);
-                indexSet.add(index);
+            int originalIndex = positionInfo[0];
+            //添加过的不需要添加
+            Object obj = resultList.get(originalIndex);
+            if(obj != null && obj instanceof int[]){
+                continue;
             }
+            resultList.set(originalIndex,positionInfo);
+            indexSet.add(originalIndex);
         }
 
         //将没有添加位置信息的部分转换为相应的字符串
@@ -117,6 +116,12 @@ public class FileSyncAlgorithm {
 
         //最后在末尾添加上 extra 字符串
         resultList.add(extra);
+
+        //对list中的块进行合并
+        if(isMergeResult){
+            List list = mergePosition(resultList);
+            return list;
+        }
         return resultList;
     }
 
@@ -159,14 +164,20 @@ public class FileSyncAlgorithm {
 
     /**
      * 原字符串的 md5 和 adler 与 目标字符串的进行对比 返回目标字符串与原字符串中相同的 位置信息
+     *
+     * 为了使传递过程中数据量减少，位置信息采用int数组的方式记录  数组一共三位
+     * 第一位：在原字符串中 块所在的索引
+     * 第二位：在目标字符串中 块所在的起始位置
+     * 第三位：在目标字符串中 块所在的终止位置
+     *
      * @author zhum
      * @date 2022/5/24 15:51
      * @param md5s
      * @param targetStr
      * @param step
-     * @return java.util.ArrayList<cn.com.dmg.myspringboot.test.PositionInfo>
+     * @return
      */
-    public static List<PositionInfo> compareStr(List<String> md5s, String targetStr, int step){
+    public static List<int[]> compareStr(List<String> md5s, String targetStr, int step){
 
         /*
             每step长度为一组进行拆分，查找是否有一样的
@@ -183,7 +194,7 @@ public class FileSyncAlgorithm {
         int lastIndex = firstIndex + step;
 
         //记录位置 相同的不进行添加
-        List<PositionInfo> positionInfos = new ArrayList<>();
+        List<int[]> positionInfos = new ArrayList<>();
 
 
         while (lastIndex <= targetStr.length() - 1){
@@ -193,11 +204,13 @@ public class FileSyncAlgorithm {
             if(md5s.contains(bMd5)){
                 //记录位置信息
                 List<Integer> indexList = findIndex(md5s, bMd5);
-                PositionInfo positionInfo = new PositionInfo();
-                positionInfo.setOriginalIndexArr(indexList);
-                positionInfo.setFirstIndex(firstIndex);
-                positionInfo.setLastIndex(lastIndex);
-                positionInfos.add(positionInfo);
+                for (Integer integer : indexList) {
+                    int[] arr = new int[3];
+                    arr[0] = integer;
+                    arr[1] = firstIndex;
+                    arr[2] = lastIndex;
+                    positionInfos.add(arr);
+                }
             }
             //没有匹配上则 比对下一个块
             firstIndex ++;
@@ -229,18 +242,57 @@ public class FileSyncAlgorithm {
         StringBuilder stringBuilder = new StringBuilder();
         //遍历 list  如果类型为 Position Info 则去截取字符串 否则直接追加
         for (Object obj : list) {
-            if(obj instanceof PositionInfo){
-                int firstIndex = ((PositionInfo) obj).getFirstIndex();
-                int lastIndex = ((PositionInfo) obj).getLastIndex();
+            if(obj instanceof int[]){
+                int firstIndex = ((int[]) obj)[1];
+                int lastIndex = ((int[]) obj)[2];
                 String substring = targetStr.substring(firstIndex, lastIndex);
                 stringBuilder.append(substring);
                 continue;
             }
-
             stringBuilder.append(obj.toString());
         }
 
         return stringBuilder.toString();
 
+    }
+
+    /**
+     * 将结果中能够进行合并的位置信息进行合并
+     * @author zhum
+     * @date 2022/5/26 13:57
+     * @param originalPositions
+     * @return java.util.List
+     */
+    private static List mergePosition(List originalPositions){
+        List newResult = new ArrayList();
+        int index = 0;
+        while (index < originalPositions.size()){
+            /*
+                1.如果当前元素为String类型的，则直接放入 newResult
+                2.如果当前元素为int[]类型，则向后一直寻找，直到找到String类型的，然后将前面的部分进行合并
+                @author zhum
+                @date 2022/5/26 11:20
+             */
+            Object currentObj = originalPositions.get(index);
+            if(currentObj instanceof String){
+                newResult.add(currentObj);
+                index ++;
+                continue;
+            }
+
+            if(currentObj instanceof int[] && index < originalPositions.size() - 1){
+                Object nextObj = originalPositions.get(++index);
+                while (nextObj instanceof int[] && index < originalPositions.size()){
+                    nextObj = originalPositions.get(++index);
+                }
+                //合并 firstIndex = currentObj[1]  lastIndex = nextObj的上一个元素[2]
+                int[] arr= new int[3];
+                arr[0] = ((int[])currentObj)[0];
+                arr[1] = ((int[])currentObj)[1];
+                arr[2] = ((int[])originalPositions.get(index - 1))[2];
+                newResult.add(arr);
+            }
+        }
+        return newResult;
     }
 }
