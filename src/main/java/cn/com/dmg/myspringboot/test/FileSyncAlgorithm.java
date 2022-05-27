@@ -21,16 +21,17 @@ public class FileSyncAlgorithm {
         //读取原字符串
         byte[] originalBytes = Files.readAllBytes(Paths.get("C:\\Users\\zhum\\Desktop\\from.txt"));
         String originalStr = new String(originalBytes, "utf-8");
-
+        //String originalStr = "huitaoissoman";
         //读取目标字符串
         byte[] targetBytes = Files.readAllBytes(Paths.get("C:\\Users\\zhum\\Desktop\\target.txt"));
         String targetStr = new String(targetBytes, "utf-8");
+        //String targetStr = "ihuit1aoisso1man";
         int length = targetStr.length();
 
         int step = 80;
 
         long start = System.currentTimeMillis();
-        System.out.println(execute(originalStr, targetStr, step,false));
+        System.out.println(execute(originalStr, targetStr, step,true));
         long end = System.currentTimeMillis();
 
         System.out.println("执行整个算法用时：" + (end - start) + "毫秒，目标字符串的长度为：" + length + "，分块的长度为：" + step);
@@ -135,7 +136,7 @@ public class FileSyncAlgorithm {
      * @return void
      */
     private static List<String> makeBolck(String originalStr, int step, StringBuilder extra) {
-        //四个字节一组，每一组算出md5值
+        //step个长度一组，每一组算出md5值
         int firstIndex = 0;
         int lastIndex = firstIndex + step;
         //存放md5
@@ -163,7 +164,7 @@ public class FileSyncAlgorithm {
 
 
     /**
-     * 原字符串的 md5 和 adler 与 目标字符串的进行对比 返回目标字符串与原字符串中相同的 位置信息
+     * 原字符串的 md5 与 目标字符串的进行对比 返回目标字符串与原字符串中相同的 位置信息
      *
      * 为了使传递过程中数据量减少，位置信息采用int数组的方式记录  数组一共三位
      * 第一位：在原字符串中 块所在的索引
@@ -186,10 +187,8 @@ public class FileSyncAlgorithm {
             @author zhum
             @date 2022/5/24 10:07
          */
-        //起点
-        int startIndex = 0;
         //第一个点
-        int firstIndex = startIndex;
+        int firstIndex = 0;
         //最后一个点
         int lastIndex = firstIndex + step;
 
@@ -281,8 +280,12 @@ public class FileSyncAlgorithm {
             }
 
             if(currentObj instanceof int[] && index < originalPositions.size() - 1){
+                //前一个位置信息的 终点
+                int previousFirstIndex = ((int[])currentObj)[2];
                 Object nextObj = originalPositions.get(++index);
-                while (nextObj instanceof int[] && index < originalPositions.size()){
+                //并且需要 下一个元素的首位 和 上一个元素的 末位需要相等
+                while (nextObj instanceof int[] && index < originalPositions.size() - 1 && (((int[])nextObj)[1]) == previousFirstIndex){
+                    previousFirstIndex = ((int[])nextObj)[2];
                     nextObj = originalPositions.get(++index);
                 }
                 //合并 firstIndex = currentObj[1]  lastIndex = nextObj的上一个元素[2]
