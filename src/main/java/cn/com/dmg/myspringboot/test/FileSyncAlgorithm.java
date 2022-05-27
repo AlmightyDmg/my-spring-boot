@@ -26,7 +26,7 @@ public class FileSyncAlgorithm {
         byte[] targetBytes = Files.readAllBytes(Paths.get("C:\\Users\\zhum\\Desktop\\target.txt"));
         String targetStr = new String(targetBytes, "utf-8");
         //String targetStr = "ihuit1aoisso1man";
-        int length = targetStr.length();
+        int length = originalStr.length();
 
         int step = 80;
 
@@ -53,16 +53,25 @@ public class FileSyncAlgorithm {
         //分组之后剩余的部分
         StringBuilder extra = new StringBuilder();
 
+        long start = System.currentTimeMillis();
         //1.按照一定的字节大小对字符串进行分块 算md5 和 adler32  （这里先只算md5）
         List<String> md5List = makeBolck(originalStr, step, extra);
+        long end1 = System.currentTimeMillis();
 
+        System.out.println("执行步骤1用时：" + (end1 - start));
 
         //2.通过和目标字符串进行对比，返回 目标字符串在原字符串中存在的部分的位置信息
         List<int[]> positionInfos = compareStr(md5List,targetStr,step);
+        long end2 = System.currentTimeMillis();
 
+        System.out.println("执行步骤2用时：" + (end2 - end1));
 
         //3.通过位置信息 与 原字符串相比较 将 变化的部分 转换为字符串 进行传递
         List resultList = translateChange(md5List,positionInfos,originalStr,step,extra.toString(),true);
+
+        long end3 = System.currentTimeMillis();
+
+        System.out.println("执行步骤3用时：" + (end3 - end2));
 
         if(!isTranslate){
             return true;
@@ -70,6 +79,9 @@ public class FileSyncAlgorithm {
 
         //4.翻译位置信息 和 字符串 得出最后的文本结果  如果最后的文本结果 与 原来的文本 originalStr 相同  则说明算法没有问题
         String s = translateStr(resultList, targetStr);
+        long end4 = System.currentTimeMillis();
+
+        System.out.println("执行步骤4用时：" + (end4 - end3));
         //System.out.println(s);
         return s.equals(originalStr);
     }
