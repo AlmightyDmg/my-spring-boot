@@ -141,7 +141,7 @@ public class FileSyncAlgorithm {
         int lastIndex = firstIndex + step;
         //存放md5
         List<String> md5List = new ArrayList<>();
-        while (lastIndex <= originalStr.length() - 1){
+        while (lastIndex <= originalStr.length()){
             //求出md5值
             String md5 = MD5.create().digestHex(originalStr.substring(firstIndex, lastIndex));
             md5List.add(md5);
