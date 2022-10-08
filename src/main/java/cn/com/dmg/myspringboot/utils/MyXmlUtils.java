@@ -1,6 +1,9 @@
 package cn.com.dmg.myspringboot.utils;
 
+import cn.com.dmg.myspringboot.constant.JzxtElementAttrNameConstants;
+import cn.com.dmg.myspringboot.constant.JzxtTagNameConstants;
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.core.util.XmlUtil;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.XML;
@@ -19,61 +22,91 @@ public class MyXmlUtils {
     //private static RedisUtil redisUtil;
 
     public static void main(String[] args) {
-        String xmlPath = "C:/Users/zhum/Desktop/jz_simple.xml";
+        String xmlPath = "C:/Users/zhum/Desktop/test.xml";
         File file = new File(xmlPath);
         Document document = XmlUtil.readXML(file);
 
-        Element item = XmlUtil.getElementByXPath("//item[@id='2534443']", document);
-        Node parentNode = item.getParentNode();
-        System.out.println(XmlUtil.toStr(document));
-        parentNode.removeChild(item);
-        NamedNodeMap attributes = parentNode.getAttributes();
-        Node id = attributes.getNamedItem("id");
-        String nodeValue = id.getNodeValue();
-
-        System.out.println(XmlUtil.toStr(document));
-
-
-
-//        Element catalogue = XmlUtil.getElementByXPath("//catalogue[@id='1-1']", document);
-//
-//        NodeList childNodes = catalogue.getChildNodes();
-//        List<Element> elementList = XmlUtil.transElements(childNodes);
-////        int i = 0;
-////        for (Element element : elementList) {
-////            String tagName = element.getTagName();
-////            if("item".equals(tagName)){
-////                i ++;
-////            }
-////        }
-//
-//
-//        System.out.println("catalogue个数为：" + childNodes.getLength());
-//
-//        System.out.println("catalogue个数为：" + elementList.size());
-        //System.out.println("item个数为：" + i);
-
-
-//        //查询目录
-//        Element catalogue = XmlUtil.getElementByXPath("//catalogue[@id='a']", document);
-//        //新增一个item 包含子节点
-//        Element itemP = document.createElement("item");
-//        itemP.setAttribute("id","p");
-//        //查询两个节点，放到itemP下
-//        Element itemEle1 = XmlUtil.getElementByXPath("//catalogue[@id='a']/item[@id='1']", document);
-//        Element itemEle2 = XmlUtil.getElementByXPath("//catalogue[@id='a']/item[@id='2']", document);
-//        //先在目录下删除，再移动
-//        catalogue.removeChild(itemEle1);
-//        catalogue.removeChild(itemEle2);
-//        //移动
-//        itemP.appendChild(itemEle1);
-//        itemP.appendChild(itemEle2);
-//        //将itemP放到目录下
-//        catalogue.appendChild(itemP);
-//
-//        catalogue.removeChild(itemP);
+//        Element item = XmlUtil.getElementByXPath("//item[@id='2534443']", document);
+        NodeList item = XmlUtil.getNodeListByXPath("//item[contains(@pushUserIds,'1390202975103791105')]", document);
+//        Node parentNode = item.getParentNode();
+//        System.out.println(XmlUtil.toStr(document));
+//        parentNode.removeChild(item);
+//        NamedNodeMap attributes = parentNode.getAttributes();
+//        Node id = attributes.getNamedItem("id");
+//        String nodeValue = id.getNodeValue();
 //
 //        System.out.println(XmlUtil.toStr(document));
+
+        queryXmlByUserId(document);
+
+
+//
+//        System.out.println(XmlUtil.toStr(document));
+
+
+    }
+
+
+
+
+    public static void queryXmlByUserId(Document document){
+        String userId = "1448933929359163393";
+        String catalogueCode = "E900";
+        Element elementByCatalogueCode = getElementByCatalogueCode(document, catalogueCode);
+        //获得 code 目录下的所有子节点
+        NodeList childNodes = elementByCatalogueCode.getChildNodes();
+
+        for (int i = 0; i < childNodes.getLength(); i++) {
+            Node catalogue = childNodes.item(i);
+            String nodeName = catalogue.getNodeName();
+            //目录
+            if(nodeName.equals(JzxtTagNameConstants.CATALOGUE)){
+                NamedNodeMap attributes = catalogue.getAttributes();
+                Node idNode = attributes.getNamedItem(JzxtElementAttrNameConstants.ID);
+                String id = idNode.getNodeValue();
+
+                //如果目录id 为 当前用户id 则全目录保存
+                if(userId.equals(id)){
+                    continue;
+                } else {
+                    //如果不为当前目录id  则需要 遍历节点 查看pushUserIds中是否包含当前目录节点 不包含则删除
+                    NodeList itemChildNodes = catalogue.getChildNodes();
+                    for (int i1 = 0; i1 < itemChildNodes.getLength(); i1++) {
+                        Node itemNode = itemChildNodes.item(i1);
+                        String itemNodeName = itemNode.getNodeName();
+                        //item节点
+                        if(itemNodeName.equals(JzxtTagNameConstants.ITEM)){
+                            //判断是否包含userid
+                            NamedNodeMap attributes1 = itemNode.getAttributes();
+                            Node namedItem = attributes1.getNamedItem(JzxtElementAttrNameConstants.PUSH_USER_IDS);
+                            if(namedItem!=null){
+                                String pushUserIds = namedItem.getNodeValue();
+                                if(!pushUserIds.contains(userId)){
+                                    //移除
+                                    catalogue.removeChild(itemNode);
+                                }
+                            }
+                        }
+
+                    }
+                }
+            }
+        }
+
+        NodeList nodeListByXPath = XmlUtil.getNodeListByXPath("/root/catalogue", document);
+        Element rootElement = XmlUtil.getRootElement(document);
+        System.out.println(nodeListByXPath.getLength());
+        for (int i = 0; i < nodeListByXPath.getLength(); i++) {
+            Node item = nodeListByXPath.item(i);
+            NamedNodeMap attributes = item.getAttributes();
+            Node namedItem = attributes.getNamedItem(JzxtElementAttrNameConstants.CODE);
+            if(!catalogueCode.equals(namedItem.getNodeValue())){
+                System.out.println(namedItem.getNodeValue());
+                rootElement.removeChild(item);
+            }
+        }
+
+        System.out.println(XmlUtil.toStr(document));
 
 
     }
@@ -116,6 +149,17 @@ public class MyXmlUtils {
         System.out.println(XmlUtil.toStr(document));
     }
 
+    /**
+     * @Description 根据目录Code查询Element
+     * @author zhum
+     * @date 2021/11/22 15:09
+     * @param document
+     * @param catalogueCode
+     * @Return org.w3c.dom.Element
+     */
+    public static Element getElementByCatalogueCode(Document document,String catalogueCode){
+        return getElementByTagNameAndAttr(document, JzxtTagNameConstants.CATALOGUE, JzxtElementAttrNameConstants.CODE,catalogueCode);
+    }
 
     /**
      * @Description 批量新增item
@@ -194,8 +238,8 @@ public class MyXmlUtils {
         System.out.println(format);
     }
 
-//    public static void test(){
-//        String xmlPath = "C:/Users/zhum/Desktop/jz.xml";
+    public static void test(){
+        String xmlPath = "C:/Users/zhum/Desktop/jz.xml";
 //        File file = new File(xmlPath);
 //        Document document = XmlUtil.readXML(file);
 //
@@ -235,12 +279,45 @@ public class MyXmlUtils {
 //        String s = String.valueOf(deserialize);
 //        long end1 = System.currentTimeMillis();
 //        System.out.println("从Redis中查询并反序列化用时：" + (end1 - end) + "毫秒");
-//
-//        //字符串转为xmlDocument
+
+        //字符串转为xmlDocument
 //        Document document1 = XmlUtil.parseXml(s);
-//    }
+    }
 
 
+
+
+    /**
+     * @Description 根据id获得Element
+     * @author zhum
+     * @date 2021/7/30 10:16
+     * @param document
+     * @param tagName
+     * @param id
+     * @Return org.w3c.dom.Element
+     */
+    private static Element getElementById(Document document, String tagName, String id) {
+        return getElementByTagNameAndAttr(document,tagName, JzxtElementAttrNameConstants.ID,id);
+    }
+
+    /**
+     * @Description 通过标签名和属性名获得Element
+     * @author zhum
+     * @date 2021/7/30 10:21
+     * @param document
+     * @param tagName
+     * @param attrName
+     * @param attrValue
+     * @Return org.w3c.dom.Element
+     */
+    public static Element getElementByTagNameAndAttr(Document document,String tagName,String attrName,String attrValue){
+        if(document == null || StrUtil.isEmpty(tagName) || StrUtil.isEmpty(attrName) || StrUtil.isEmpty(attrValue)){
+            return null;
+        }
+        String xPath = "//" + tagName + "[@"+attrName+"='"+attrValue+"']";
+        Element elementByXPath = XmlUtil.getElementByXPath(xPath, document);
+        return elementByXPath;
+    }
 
 
     public static void xml2Json(String xmlStr){
