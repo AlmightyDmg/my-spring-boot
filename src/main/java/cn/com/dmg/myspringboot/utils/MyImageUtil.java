@@ -6,16 +6,16 @@ import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Stack;
+import java.util.Queue;
 
 import javax.imageio.ImageIO;
 
-import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.util.StrUtil;
 
 /**
  * @ClassName MyImageUtil
@@ -58,7 +58,7 @@ public class MyImageUtil {
             //生成正文
             List<String> contentPathList = addWord2Content(content);
             //打包成文件夹
-            String dirPath = "C:\\Users\\13117\\Desktop\\" + (i+1);
+            String dirPath = "C:\\Users\\13117\\Desktop\\每日一题生成\\" + (i+1);
             FileUtil.mkdir(dirPath);
 
             //移动封面
@@ -70,6 +70,14 @@ public class MyImageUtil {
                 FileUtil.copyFile(contentPath, dirPath, StandardCopyOption.REPLACE_EXISTING);
                 FileUtil.del(contentPath);
             }
+
+            //移动结尾
+            FileUtil.copyFile("C:\\Users\\13117\\Desktop\\结尾.png", dirPath, StandardCopyOption.REPLACE_EXISTING);
+
+            //原文本内容
+            File file = FileUtil.newFile(dirPath + "\\文本内容.txt");
+            FileUtil.writeString(everyDayContent, file, "utf-8");
+
         }
 
 
@@ -92,19 +100,17 @@ public class MyImageUtil {
         Integer offsetY = 70;
 
         //判断一共要多少页 默认每两端一页
-        String[] splits = word.split("\n");
-        Stack<String> stringStack = new Stack<>();
-        for (String split : splits) {
-            stringStack.push(split);
-        }
+        word = word.replaceFirst("\r\n", "");
+        String[] splits = word.split("\r\n");
+        Queue<String> stringQueue = new ArrayDeque<>(Arrays.asList(splits));
 
         int a = 0;
         List<String> list = new ArrayList<>();
-        while (!stringStack.empty()) {
+        while (stringQueue.size() > 0) {
             //出栈两个
-            String content = stringStack.pop();
-            if (!stringStack.empty()) {
-                content += "\n" + stringStack.pop();
+            String content = stringQueue.poll();
+            if (stringQueue.size() > 0) {
+                content += "\r\n" + stringQueue.poll();
             }
             String outPath = "C:\\Users\\13117\\Desktop\\" + ++a + ".png";
             addWord2Image(templateImgPath, outPath, content, fontSize, step, initX, initY, offsetY);
@@ -159,10 +165,13 @@ public class MyImageUtil {
             g2d.setColor(Color.BLACK); // 设置颜色为白色
 
             //段落
-            String[] sections = word.split("\n");
+            String[] sections = word.split("\r\n");
 
             for (int i = 0; i < sections.length; i++) {
                 String section = sections[i];
+                if (StrUtil.isEmpty(section)) {
+                    continue;
+                }
                 Integer[] integers = addWord2G2d(g2d, section, step, initX, initY, offsetY);
                 initX = integers[0];
                 //换段落加两倍
