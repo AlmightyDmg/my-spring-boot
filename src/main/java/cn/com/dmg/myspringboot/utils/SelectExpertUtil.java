@@ -1,5 +1,6 @@
 package cn.com.dmg.myspringboot.utils;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -20,13 +21,20 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
-public class ExcelReader {
+/**
+ * @ClassName SelectExperts
+ * @Description 专家遴选
+ * @author zhum
+ * @date 2024/1/13 10:08
+ */
+public class SelectExpertUtil {
     public static List<School> schoolList56 = null;
     public static List<School> schoolList147 = null;
 
     public static void main(String[] args) throws Exception {
-        //String projectExcelPath = "C:\\Users\\13117\\Desktop\\项目案例-经济学.xlsx";
-        String projectExcelPath = "C:\\Users\\13117\\Desktop\\项目案例-工学-1组.xlsx";
+        String projectExcelPath = "C:\\Users\\13117\\Desktop\\项目案例-经济学.xlsx";
+        FileInputStream fileInputStream = new FileInputStream(projectExcelPath);
+        //String projectExcelPath = "C:\\Users\\13117\\Desktop\\项目案例-工学-1组.xlsx";
         //首先获得项目分组
         //Map<String, List<JSONObject>> groupMap = getGroupMap();
         //获得56所高校
@@ -34,7 +42,7 @@ public class ExcelReader {
         //获得147所双一流
         schoolList147 = get147School();
 
-        Map<String, List<Expert>> stringListMap = allocateExpert(11, projectExcelPath);
+        Map<String, List<Expert>> stringListMap = allocateExpert(11, fileInputStream);
 
         System.out.println();
     }
@@ -46,9 +54,9 @@ public class ExcelReader {
      * @param
      * @return void
      */
-    public static Map<String, List<Expert>> allocateExpert(Integer perGroupExpertNum, String projectExcelPath) throws Exception{
+    public static Map<String, List<Expert>> allocateExpert(Integer perGroupExpertNum, FileInputStream projectExcelIns) throws Exception{
         //首先获得所有项目分组
-        Map<String, List<Project>> groupMap = getGroupMap(projectExcelPath);
+        Map<String, List<Project>> groupMap = getGroupMap(projectExcelIns);
         //分配的专家 key 组名 value 专家集合
         Map<String, List<Expert>> allocateExpertMap = new HashMap<>();
         Set<String> keySet = groupMap.keySet();
@@ -79,6 +87,9 @@ public class ExcelReader {
                 }
 
                 Expert expert = selectExpert(groupTotalNum, groupName, expertStackGroupByGrade);
+                //设置选择理由
+                expert.setSelectReason();
+
 
                 //判断该组项目中是否有专家所在的学校
                 if (containExpertSchool(groupMap.get(groupName), expert)) {
@@ -370,7 +381,7 @@ public class ExcelReader {
      * @return java.util.List<org.apache.poi.ss.usermodel.Row>
      */
     public static List<School> get56School() throws Exception{
-        return getSchool("C:\\Users\\13117\\Desktop\\56所高校名单.xlsx");
+        return getSchool(new FileInputStream("C:\\Users\\13117\\Desktop\\56所高校名单.xlsx"));
     }
 
     /**
@@ -381,11 +392,11 @@ public class ExcelReader {
      * @return java.util.List<cn.com.dmg.myspringboot.utils.ExcelReader.School>
      */
     public static List<School> get147School() throws Exception{
-        return getSchool("C:\\Users\\13117\\Desktop\\双一流147所名单.xlsx");
+        return getSchool(new FileInputStream("C:\\Users\\13117\\Desktop\\双一流147所名单.xlsx"));
     }
 
-    public static List<School> getSchool(String path) throws Exception{
-        List<Row> rowList = getRowListFromExcel(path);
+    public static List<School> getSchool(FileInputStream fileInputStream) throws Exception{
+        List<Row> rowList = getRowListFromExcel(fileInputStream);
         List<JSONObject> rowJsonObjList = getRowJsonObjList(rowList);
         List<School> schoolList = new ArrayList<>();
         for (JSONObject jsonObject : rowJsonObjList) {
@@ -404,14 +415,13 @@ public class ExcelReader {
      * 获取项目分组
      * @author zhum
      * @date 2024/1/13 9:32
-     * @param projectExcelPath
      * @return java.util.Map<java.lang.String,java.util.List<cn.com.dmg.myspringboot.utils.ExcelReader.Project>>
      */
-    public static Map<String, List<Project>> getGroupMap(String projectExcelPath) throws Exception {
+    public static Map<String, List<Project>> getGroupMap(FileInputStream projectExcelIns) throws Exception {
         //分组
         Map<String, List<Project>> groupMap = new HashMap<>();
 
-        List<Row> rowListFromExcel = getRowListFromExcel(projectExcelPath);
+        List<Row> rowListFromExcel = getRowListFromExcel(projectExcelIns);
 
         List<JSONObject> rowJsonObjList = getRowJsonObjList(rowListFromExcel);
         for (JSONObject jsonObject : rowJsonObjList) {
@@ -504,11 +514,10 @@ public class ExcelReader {
     }
 
 
-    public static List<Row> getRowListFromExcel(String path) throws Exception {
+    public static List<Row> getRowListFromExcel(FileInputStream projectExcelIns) throws Exception {
         List<Row> list = new ArrayList<>();
         // 指定Excel文件路径
-        FileInputStream inputStream = new FileInputStream(path);
-        Workbook workbook = new XSSFWorkbook(inputStream);
+        Workbook workbook = new XSSFWorkbook(projectExcelIns);
         Sheet sheet = workbook.getSheetAt(0); // 获取第一个工作表
         int lastRowNum = sheet.getLastRowNum();
         //第一行是标题
@@ -518,7 +527,7 @@ public class ExcelReader {
         }
 
         workbook.close();
-        inputStream.close();
+        projectExcelIns.close();
         return list;
     }
 
@@ -547,6 +556,32 @@ public class ExcelReader {
         private Integer grade;
 
         private String description;
+
+        //选择理由
+        private String selectReason;
+
+        public void setSelectReason() {
+            switch (grade) {
+                case 1:
+                    selectReason = "案例库中存在该专家";
+                    break;
+                case 2:
+                    selectReason = "种子高校中的正高级专家且为首席专家";
+                    break;
+                case 3:
+                    selectReason = "双一流高校中的正高级专家且为首席专家";
+                    break;
+                case 4:
+                    selectReason = "种子高校的副高级专家且为首席专家";
+                    break;
+                case 5:
+                    selectReason = "正高级专家且为首席专家";
+                    break;
+                default:
+                    selectReason = "";
+                    break;
+            }
+        }
     }
 
     @Data
