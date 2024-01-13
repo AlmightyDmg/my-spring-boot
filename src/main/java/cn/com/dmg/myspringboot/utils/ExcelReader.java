@@ -25,6 +25,8 @@ public class ExcelReader {
     public static List<School> schoolList147 = null;
 
     public static void main(String[] args) throws Exception {
+        //String projectExcelPath = "C:\\Users\\13117\\Desktop\\项目案例-经济学.xlsx";
+        String projectExcelPath = "C:\\Users\\13117\\Desktop\\项目案例-工学-1组.xlsx";
         //首先获得项目分组
         //Map<String, List<JSONObject>> groupMap = getGroupMap();
         //获得56所高校
@@ -32,7 +34,7 @@ public class ExcelReader {
         //获得147所双一流
         schoolList147 = get147School();
 
-        Map<String, List<Expert>> stringListMap = allocateExpert(11);
+        Map<String, List<Expert>> stringListMap = allocateExpert(11, projectExcelPath);
 
         System.out.println();
     }
@@ -44,23 +46,25 @@ public class ExcelReader {
      * @param
      * @return void
      */
-    public static Map<String, List<Expert>> allocateExpert(Integer perGroupExpertNum) throws Exception{
+    public static Map<String, List<Expert>> allocateExpert(Integer perGroupExpertNum, String projectExcelPath) throws Exception{
         //首先获得所有项目分组
-        Map<String, List<Project>> groupMap = getGroupMap();
+        Map<String, List<Project>> groupMap = getGroupMap(projectExcelPath);
         //分配的专家 key 组名 value 专家集合
         Map<String, List<Expert>> allocateExpertMap = new HashMap<>();
         Set<String> keySet = groupMap.keySet();
-
+        //分组数量
+        Integer groupTotalNum = keySet.size();
         //所有专家
-        List<Expert> allExpert = getAllExpert();
+        List<Expert> allExpert = getAllExpert(groupMap);
 
         //获得所有专家 根据等级分组
-        Map<Integer, Stack<Expert>> expertStackGroupByGrade = getExpertStackGroupByGrade(allExpert, groupMap.size(), null);
+        Map<Integer, Stack<Expert>> expertStackGroupByGrade = getExpertStackGroupByGrade(allExpert, groupTotalNum, null);
 
-        Integer allGroupTotalNum = 0;
+        //选择的专家总数
+        Integer allSelectedExpertNum = 0;
         while (true) {
              //当所有选择的专家的总数达到数量时 跳出循环不再选择
-             if (allGroupTotalNum == (keySet.size() * perGroupExpertNum)) {
+             if (allSelectedExpertNum == (groupTotalNum * perGroupExpertNum)) {
                  break;
              }
 
@@ -74,13 +78,12 @@ public class ExcelReader {
                     }
                 }
 
-                Expert expert = selectExpert(groupName, expertStackGroupByGrade);
+                Expert expert = selectExpert(groupTotalNum, groupName, expertStackGroupByGrade);
 
                 //判断该组项目中是否有专家所在的学校
                 if (containExpertSchool(groupMap.get(groupName), expert)) {
                     expert.setDescription("注意：该项目分组中包含该专家所在的学校");
                 }
-
 
                 if (allocateExpertMap.containsKey(groupName)) {
                     List<Expert> experts = allocateExpertMap.get(groupName);
@@ -90,7 +93,7 @@ public class ExcelReader {
                     experts.add(expert);
                     allocateExpertMap.put(groupName, experts);
                 }
-                allGroupTotalNum ++;
+                allSelectedExpertNum ++;
             }
         }
 
@@ -107,12 +110,21 @@ public class ExcelReader {
         return false;
     }
 
-    public static Expert selectExpert(String groupName, Map<Integer, Stack<Expert>> expertStackGroupByGrade) {
+    /**
+     * 为每个组选择专家
+     * @author zhum
+     * @date 2024/1/13 9:34
+     * @param groupTotalNum 总的分组数量
+     * @param groupName
+     * @param expertStackGroupByGrade
+     * @return cn.com.dmg.myspringboot.utils.ExcelReader.Expert
+     */
+    public static Expert selectExpert(Integer groupTotalNum, String groupName, Map<Integer, Stack<Expert>> expertStackGroupByGrade) {
         Expert expert = null;
         //第一档
         Stack<Expert> firstStack = expertStackGroupByGrade.get(1);
         if (firstStack.size() > 0) {
-           expert = myPop(firstStack, groupName);
+           expert = myPop(firstStack, groupName, groupTotalNum);
            if (expert != null) {
                return expert;
            }
@@ -121,7 +133,7 @@ public class ExcelReader {
         //第二档
         Stack<Expert> secondStack = expertStackGroupByGrade.get(2);
         if (secondStack.size() > 0) {
-          expert = myPop(secondStack, groupName);
+          expert = myPop(secondStack, groupName, groupTotalNum);
             if (expert != null) {
                 return expert;
             }
@@ -130,7 +142,7 @@ public class ExcelReader {
         //第三档
         Stack<Expert> thirdStack = expertStackGroupByGrade.get(3);
         if (thirdStack.size() > 0) {
-            expert = myPop(thirdStack, groupName);
+            expert = myPop(thirdStack, groupName, groupTotalNum);
             if (expert != null) {
                 return expert;
             }
@@ -139,7 +151,7 @@ public class ExcelReader {
         //第四档
         Stack<Expert> fourthStack = expertStackGroupByGrade.get(4);
         if (fourthStack.size() > 0) {
-            expert = myPop(fourthStack, groupName);
+            expert = myPop(fourthStack, groupName, groupTotalNum);
             if (expert != null) {
                 return expert;
             }
@@ -148,7 +160,7 @@ public class ExcelReader {
         //第五档
         Stack<Expert> fifthStack = expertStackGroupByGrade.get(5);
         if (fifthStack.size() > 0) {
-            expert = myPop(fifthStack, groupName);
+            expert = myPop(fifthStack, groupName, groupTotalNum);
             if (expert != null) {
                 return expert;
             }
@@ -164,7 +176,12 @@ public class ExcelReader {
         return expert;
     }
 
-    private static Expert myPop(Stack<Expert> stack, String groupName) {
+    private static Expert myPop(Stack<Expert> stack, String groupName, Integer groupTotalNum) {
+        //当groupTotalNum总的组数量为1时就不需要考虑“本组互斥”的条件 直接pop即可
+        if (groupTotalNum == 1) {
+            return stack.pop();
+        }
+        //如果栈顶的和当前分组的名字相同，则需要遍历stack 找到一个不相同分组的专家
         if (Objects.equals(stack.peek().groupName, groupName)) {
             int index = -1;
             for (int i = 0; i < stack.size(); i++) {
@@ -191,10 +208,8 @@ public class ExcelReader {
      * @param
      * @return java.util.List<cn.com.dmg.myspringboot.utils.ExcelReader.Expert>
      */
-    public static List<Expert> getAllExpert() throws Exception{
+    public static List<Expert> getAllExpert(Map<String, List<Project>> groupMap) {
         //获得项目分组
-        Map<String, List<Project>> groupMap = getGroupMap();
-
         List<Expert> expertList = new ArrayList<>();
 
         Set<String> keySet = groupMap.keySet();
@@ -224,8 +239,7 @@ public class ExcelReader {
      * @param
      * @return java.util.Map<java.lang.String,java.util.List<cn.com.dmg.myspringboot.utils.ExcelReader.Expert>>
      */
-    public static Map<String, List<Expert>> getExpertGroupByGroup() throws Exception {
-        List<Expert> allExpert = getAllExpert();
+    public static Map<String, List<Expert>> getExpertGroupByGroup(List<Expert> allExpert) throws Exception {
         Map<String, List<Expert>> listMap = allExpert.stream().collect(Collectors.groupingBy(Expert::getGroupName));
         return listMap;
     }
@@ -281,7 +295,7 @@ public class ExcelReader {
      * @param expert
      * @return void
      */
-    public static void setExpertGrade(Expert expert, Project project) throws Exception{
+    public static void setExpertGrade(Expert expert, Project project) {
         String schoolCode = project.getSchoolCode();
         String title = project.getExpertTitle();
 
@@ -323,7 +337,7 @@ public class ExcelReader {
      * @param schoolCode
      * @return boolean
      */
-    public static boolean is56School(String schoolCode) throws Exception{
+    public static boolean is56School(String schoolCode){
         for (School school : schoolList56) {
             if (school.getCode().equals(schoolCode)) {
                 return true;
@@ -339,7 +353,7 @@ public class ExcelReader {
      * @param schoolCode
      * @return boolean
      */
-    public static boolean is147School(String schoolCode) throws Exception{
+    public static boolean is147School(String schoolCode){
         for (School school : schoolList147) {
             if (school.getCode().equals(schoolCode)) {
                 return true;
@@ -389,15 +403,15 @@ public class ExcelReader {
     /**
      * 获取项目分组
      * @author zhum
-     * @date 2024/1/11 19:07
-     * @param
-     * @return java.util.Map<java.lang.String,java.util.List<org.apache.poi.ss.usermodel.Row>>
+     * @date 2024/1/13 9:32
+     * @param projectExcelPath
+     * @return java.util.Map<java.lang.String,java.util.List<cn.com.dmg.myspringboot.utils.ExcelReader.Project>>
      */
-    public static Map<String, List<Project>> getGroupMap() throws Exception{
+    public static Map<String, List<Project>> getGroupMap(String projectExcelPath) throws Exception {
         //分组
         Map<String, List<Project>> groupMap = new HashMap<>();
 
-        List<Row> rowListFromExcel = getRowListFromExcel("C:\\Users\\13117\\Desktop\\项目案例-经济学.xlsx");
+        List<Row> rowListFromExcel = getRowListFromExcel(projectExcelPath);
 
         List<JSONObject> rowJsonObjList = getRowJsonObjList(rowListFromExcel);
         for (JSONObject jsonObject : rowJsonObjList) {
