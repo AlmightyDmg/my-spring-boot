@@ -2,6 +2,7 @@ package cn.com.dmg.myspringboot.utils;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -11,7 +12,11 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.stream.Collectors;
 
+import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.http.HttpRequest;
+import cn.hutool.http.HttpResponse;
+import cn.hutool.http.HttpUtil;
 import cn.hutool.json.JSONObject;
 import lombok.Data;
 import org.apache.poi.ss.usermodel.Cell;
@@ -38,9 +43,9 @@ public class SelectExpertUtil {
         //首先获得项目分组
         //Map<String, List<JSONObject>> groupMap = getGroupMap();
         //获得56所高校
-        schoolList56 = get56School();
+        get56School();
         //获得147所双一流
-        schoolList147 = get147School();
+        get147School();
 
         Map<String, List<Expert>> stringListMap = allocateExpert(11, fileInputStream);
 
@@ -54,7 +59,7 @@ public class SelectExpertUtil {
      * @param
      * @return void
      */
-    public static Map<String, List<Expert>> allocateExpert(Integer perGroupExpertNum, FileInputStream projectExcelIns) throws Exception{
+    public static Map<String, List<Expert>> allocateExpert(Integer perGroupExpertNum, InputStream projectExcelIns) throws Exception{
         //首先获得所有项目分组
         Map<String, List<Project>> groupMap = getGroupMap(projectExcelIns);
         //分配的专家 key 组名 value 专家集合
@@ -380,8 +385,14 @@ public class SelectExpertUtil {
      * @param
      * @return java.util.List<org.apache.poi.ss.usermodel.Row>
      */
-    public static List<School> get56School() throws Exception{
-        return getSchool(new FileInputStream("C:\\Users\\13117\\Desktop\\56所高校名单.xlsx"));
+    public static void get56School() throws Exception{
+        if (schoolList56 == null) {
+            String url = "http://10.10.12.117:9000/cms/fileTemp/56.xlsx";
+            HttpResponse response = HttpUtil.createGet(url).execute();
+            InputStream inputStream = response.bodyStream();
+            //new FileInputStream("C:\\Users\\13117\\Desktop\\56所高校名单.xlsx")
+            schoolList56 = getSchool(inputStream);
+        }
     }
 
     /**
@@ -391,11 +402,17 @@ public class SelectExpertUtil {
      * @param
      * @return java.util.List<cn.com.dmg.myspringboot.utils.ExcelReader.School>
      */
-    public static List<School> get147School() throws Exception{
-        return getSchool(new FileInputStream("C:\\Users\\13117\\Desktop\\双一流147所名单.xlsx"));
+    public static void get147School() throws Exception{
+        if (schoolList147 == null) {
+            String url = "http://10.10.12.117:9000/cms/fileTemp/147.xlsx";
+            HttpResponse response = HttpUtil.createGet(url).execute();
+            InputStream inputStream = response.bodyStream();
+            //new FileInputStream("C:\\Users\\13117\\Desktop\\双一流147所名单.xlsx")
+            schoolList147 = getSchool(inputStream);
+        }
     }
 
-    public static List<School> getSchool(FileInputStream fileInputStream) throws Exception{
+    public static List<School> getSchool(InputStream fileInputStream) throws Exception{
         List<Row> rowList = getRowListFromExcel(fileInputStream);
         List<JSONObject> rowJsonObjList = getRowJsonObjList(rowList);
         List<School> schoolList = new ArrayList<>();
@@ -417,7 +434,7 @@ public class SelectExpertUtil {
      * @date 2024/1/13 9:32
      * @return java.util.Map<java.lang.String,java.util.List<cn.com.dmg.myspringboot.utils.ExcelReader.Project>>
      */
-    public static Map<String, List<Project>> getGroupMap(FileInputStream projectExcelIns) throws Exception {
+    public static Map<String, List<Project>> getGroupMap(InputStream projectExcelIns) throws Exception {
         //分组
         Map<String, List<Project>> groupMap = new HashMap<>();
 
@@ -514,7 +531,7 @@ public class SelectExpertUtil {
     }
 
 
-    public static List<Row> getRowListFromExcel(FileInputStream projectExcelIns) throws Exception {
+    public static List<Row> getRowListFromExcel(InputStream projectExcelIns) throws Exception {
         List<Row> list = new ArrayList<>();
         // 指定Excel文件路径
         Workbook workbook = new XSSFWorkbook(projectExcelIns);

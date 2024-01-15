@@ -1,27 +1,19 @@
 package cn.com.dmg.myspringboot.test;
 
-import cn.hutool.core.codec.Base64;
-import cn.hutool.core.date.DateUtil;
-import cn.hutool.core.util.RandomUtil;
-import cn.hutool.crypto.SecureUtil;
-import cn.hutool.crypto.digest.MD5;
-import cn.hutool.http.HttpUtil;
-import cn.hutool.http.Method;
-
-import java.text.DateFormat;
-import java.text.ParseException;
+import java.net.HttpCookie;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
+
+import cn.hutool.http.HttpResponse;
+import cn.hutool.http.HttpUtil;
 
 public class MyTest {
 
     public static void main(String[] args) throws Exception {
-
-        System.out.println(Base64.encode("skyvis"));
-        byte[] mzIxes = Base64.decode("MzIx");
-        String s = new String(mzIxes);
-        System.out.println(s);
-
+        String url = "http://10.10.12.117:9000/cms/2023/12/25/dd5643ed09f04e618f5fd433900fb085.png";
+        System.out.println(url.substring(url.indexOf("/cms/")));
     }
 
 }
