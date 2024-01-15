@@ -18,12 +18,12 @@ import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.StrUtil;
 
 /**
- * @ClassName MyImageUtil
- * @Description
+ * @ClassName AutoGenerateEveryDayTopicUtil
+ * @Description 自动生成每日一题
  * @author zhum
- * @date 2024/1/6 17:24
+ * @date 2024/1/15 9:21
  */
-public class MyImageUtil {
+public class AutoGenerateEveryDayTopicUtil {
     public static void main(String[] args) throws Exception{
         //addWord2Cover("什么是泛型？有什么好处？你好我是朱猛1");
 //        addWord2Content("ThreadLocal是java.lang下面的一个类，是用来解决java多线程程序中并发问题的一种途径；通过为每一个线程创建一份共享变量的副本来保证各个线程之间的变量的访问和修改互相不影响；\n" +
