@@ -1,19 +1,21 @@
 package cn.com.dmg.myspringboot.test;
 
-import java.net.HttpCookie;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-
-import cn.hutool.http.HttpResponse;
-import cn.hutool.http.HttpUtil;
+import cn.hutool.core.io.FileUtil;
 
 public class MyTest {
 
     public static void main(String[] args) throws Exception {
-        String url = "http://10.10.12.117:9000/cms/2023/12/25/dd5643ed09f04e618f5fd433900fb085.png";
-        System.out.println(url.substring(url.indexOf("/cms/")));
+//        String text = "((((标题=1) AND 标题=2) OR 标题=3) AND 标题=4) AND 关键词=5*";
+//        //首先找到 ( 最后一次出现的位置
+//        int lastIndexOf = text.lastIndexOf("(");
+//        //找到)第一次出现的位置
+//        System.out.println(text.indexOf(")"));
+//        //裁剪
+//        String substring = text.substring(lastIndexOf, text.indexOf(")") + 1);
+//        System.out.println(substring);
+//        //替换
+//        System.out.println(text.replace(substring, ""));
+        System.out.println(FileUtil.getPrefix("123.pdf"));
     }
 
 }
