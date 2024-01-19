@@ -10,6 +10,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Queue;
 
 import javax.imageio.ImageIO;
@@ -94,7 +95,7 @@ public class AutoGenerateEveryDayTopicUtil {
         String templateImgPath = "C:\\Users\\13117\\Desktop\\content_template.png";
 
         Integer fontSize = 45;
-        Integer step = 20;
+        Integer step = 19;
         Integer initX = 220;
         Integer initY = 530;
         Integer offsetY = 70;
@@ -130,7 +131,7 @@ public class AutoGenerateEveryDayTopicUtil {
         String templateImgPath = "C:\\Users\\13117\\Desktop\\cover_template.png";
         String outPath = "C:\\Users\\13117\\Desktop\\封面.png";
         Integer fontSize = 90;
-        Integer step = 10;
+        Integer step = 9;
         Integer initX = 150;
         Integer initY = 850;
         Integer offsetY = 120;
@@ -141,7 +142,7 @@ public class AutoGenerateEveryDayTopicUtil {
 
 
     /**
-     *
+     * 向图片中添加文字
      * @author zhum
      * @date 2024/1/6 16:58
      * @param word 需要添加的文字
@@ -188,25 +189,47 @@ public class AutoGenerateEveryDayTopicUtil {
         }
     }
 
+    /**
+     * 获取x 和 y 的位置
+     * @author zhum
+     * @date 2024/1/19 16:59
+     * @param x
+     * @param y
+     * @param offsetY
+     * @return int[]
+     */
     private static int[] getXY(Integer x, Integer y, int offsetY){
         //x不变 纵轴增加
         return new int[]{x, y + offsetY};
     }
 
+    /**
+     * 向 Graphics2D 对象中添加文字
+     * @author zhum
+     * @date 2024/1/19 16:59
+     * @param g2d
+     * @param word 一段文字
+     * @param step 步长（一行放多少个文字）
+     * @param initX 初始x位置
+     * @param initY 初始y位置
+     * @param offsetY y轴偏移量（换行的时候y轴向下移动的距离）
+     * @return java.lang.Integer[]
+     */
     private static Integer[] addWord2G2d (Graphics2D g2d, String word, Integer step, Integer initX, Integer initY, Integer offsetY) {
-        //一共多少行
-        Integer rows = word.length() / step + 1;
 
-        //像图片上添加文字
-        for (Integer i = 0; i < rows; i++) {
-            //需要添加的文字
-            int start = i * step;
-            int end = Math.min(start + step, word.length());
-            String substring = word.substring(start, end);
+        /*
+            获取一共有多少行
+            因为英文、中文、标点符号所占用的空间不一样，所以不按照步长的形式进行平均分
+            而是根据英文、中文、标点的实际情况去分，最大长度不超过 step
+            @author zhum
+            @date 2024/1/19 17:19
+         */
 
+        //获取每一行的内容
+        List<String> rowList = getPerRowStr(word, step);
+        for (String rowStr : rowList) {
             // 将文字添加到图片上
-            g2d.drawString(substring, initX, initY);
-
+            g2d.drawString(rowStr, initX, initY);
             int[] xy = getXY(initX, initY, offsetY);
             initX = xy[0];
             initY = xy[1];
@@ -215,7 +238,60 @@ public class AutoGenerateEveryDayTopicUtil {
 //                throw new RuntimeException("该页文字过长");
 //            }
         }
-
         return new Integer[]{initX, initY};
+    }
+
+    /**
+     * 根据规则获取每一行的内容
+     * @author zhum
+     * @date 2024/1/19 17:47
+     * @param word 一段内容
+     * @param step 标准步长
+     * @return java.util.List<java.lang.String>
+     */
+    private static List<String> getPerRowStr(String word, Integer step) {
+        char[] chars = word.toCharArray();
+        Queue<Character> queue = new ArrayDeque<>();
+        for (char aChar : chars) {
+            queue.add(aChar);
+        }
+
+        List<String> rows = new ArrayList<>();
+
+        double currentRowLength = 0d;
+        String row = "";
+        while (queue.size() > 0) {
+            Character pollChar = queue.poll();
+            Character.UnicodeBlock block = Character.UnicodeBlock.of(pollChar);
+            row += pollChar;
+            //中文
+            if (block == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS ||
+                    block == Character.UnicodeBlock.CJK_COMPATIBILITY_IDEOGRAPHS ||
+                    Objects.equals(pollChar.toString(), "，") ||
+                    Objects.equals(pollChar.toString(), "、")
+            ) {
+                currentRowLength ++;
+
+            } else {
+                //非中文
+                currentRowLength += 0.5;
+            }
+
+            //判断是否达到一行的标准
+            if (currentRowLength >= step || queue.size() == 0) {
+                currentRowLength = 0d;
+                //判断如果下一个字节是标点符号 则添加到行后面
+                if (queue.size() > 0) {
+                    String s = queue.peek().toString();
+                    if (s.equals("。") || s.equals("、") || s.equals("，") || s.equals("；")) {
+                        row += queue.poll();
+                    }
+                }
+                rows.add(row);
+                row = "";
+            }
+        }
+
+        return rows;
     }
 }
