@@ -17,6 +17,7 @@ import javax.imageio.ImageIO;
 
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.core.util.ZipUtil;
 
 /**
  * @ClassName AutoGenerateEveryDayTopicUtil
@@ -46,6 +47,8 @@ public class AutoGenerateEveryDayTopicUtil {
     public static void autoGenerate() {
         //读取文档内容
         String allContent = FileUtil.readString(new File("C:\\Users\\13117\\Desktop\\每日一题.txt"), "utf-8");
+        //工作目录
+        String workDir = "C:\\Users\\13117\\Desktop\\每日一题生成";
         //######分隔每一天的
         String[] everyDayContentArr = allContent.split("######");
         for (int i = 0; i < everyDayContentArr.length; i++) {
@@ -59,7 +62,7 @@ public class AutoGenerateEveryDayTopicUtil {
             //生成正文
             List<String> contentPathList = addWord2Content(content);
             //打包成文件夹
-            String dirPath = "C:\\Users\\13117\\Desktop\\每日一题生成\\" + (i+1);
+            String dirPath = workDir + "\\" + (i+1);
             FileUtil.mkdir(dirPath);
 
             //移动封面
@@ -80,8 +83,8 @@ public class AutoGenerateEveryDayTopicUtil {
             FileUtil.writeString(everyDayContent, file, "utf-8");
 
         }
-
-
+        //生成压缩文件
+        ZipUtil.zip(workDir);
     }
 
     /**
